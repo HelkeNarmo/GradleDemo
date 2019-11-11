@@ -1,0 +1,2 @@
+include ':app', ':plugintest'
+rootProject.name='GradleDemo'

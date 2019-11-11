@@ -1,0 +1,107 @@
+apply plugin: 'com.android.application'
+//apply plugin: 'com.narmo.plugintest.test'
+
+android {
+    signingConfigs {
+        release {
+            storeFile file('/Users/zhengjihan/coding/studio_workspace/GradleDemo/release.keystore')
+            keyAlias = 'ReleaseKey'
+        }
+    }
+    compileSdkVersion 28
+    defaultConfig {
+        applicationId "com.narmo.gradledemo"
+        minSdkVersion 16
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+        debug {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    flavorDimensions "color", "price"
+
+    productFlavors {
+        red {
+            dimension "color"
+        }
+        blue {
+            dimension "color"
+        }
+        free {
+            dimension "price"
+        }
+        paid {
+            dimension "price"
+        }
+    }
+}
+
+
+
+android.variantFilter { variant ->
+    if(variant.buildType.name.equals('release')) {
+        variant.getFlavors().each() { flavor ->
+            if(flavor.name.equals('blue')) {
+                variant.setIgnore(true);
+            }
+        }
+    }
+}
+
+repositories {
+    flatDir {
+        dirs '../aars'
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'androidx.appcompat:appcompat:1.0.2'
+    runtimeOnly 'androidx.constraintlayout:constraintlayout:1.1.3'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
+//    implementation(name:'library', ext:'aar')
+}
+
+task getReleasePassword {
+    def password = ''
+    File proFile = rootProject.file('private.properties');
+    if (proFile.exists()) {
+        Properties properties = new Properties()
+        properties.load(proFile.newDataInputStream())
+        password = properties.getProperty('release.password')
+    }
+    android.signingConfigs.release.storePassword = password
+    android.signingConfigs.release.keyPassword = password
+}
+
+android.applicationVariants.all { variant ->
+//    variant.outputs.all {
+//        outputFileName = "gradledemo-${variant.name}-v${variant.versionName}.apk"
+//    }
+    if (variant.install) {
+        tasks.create(name: "run${variant.name.capitalize()}", dependsOn: variant.install) {
+            description "Instanlls the ${variant.description} and runs the main launcher activity."
+        }
+    }
+}
+
+4.times { counter ->
+    task "task$counter" {
+        doFirst {
+            println "I'm task number $counter"
+        }
+    }
+}
